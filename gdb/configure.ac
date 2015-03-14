@@ -531,8 +531,13 @@ AC_SEARCH_LIBS(gethostbyname, nsl)
 # Some systems (e.g. Solaris) have `socketpair' in libsocket.
 AC_SEARCH_LIBS(socketpair, socket)
 
-# Link in zlib if we can.  This allows us to read compressed debug sections.
-AM_ZLIB
+# Use the system's zlib library.
+zlibdir=-L../zlib
+AC_ARG_WITH(system-zlib,
+[AS_HELP_STRING([--with-system-zlib], [use installed libz])],
+zlibdir=
+)
+AC_SUBST(zlibdir)
 
 # On FreeBSD we may need libutil for kinfo_getvmmap (used by fbsd-nat.c).
 AC_SEARCH_LIBS(kinfo_getvmmap, util,

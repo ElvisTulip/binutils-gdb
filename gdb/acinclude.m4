@@ -53,8 +53,6 @@ sinclude([../config/lcmessage.m4])
 dnl For AM_LANGINFO_CODESET.
 sinclude([../config/codeset.m4])
 
-sinclude([../config/zlib.m4])
-
 m4_include([common/common.m4])
 
 dnl For libiberty_INIT.
@@ -467,7 +465,11 @@ AC_DEFUN([GDB_AC_CHECK_BFD], [
   CFLAGS="-I${srcdir}/../include -I../bfd -I${srcdir}/../bfd $CFLAGS"
   LDFLAGS="-L../bfd -L../libiberty $LDFLAGS"
   intl=`echo $LIBINTL | sed 's,${top_builddir}/,,g'`
-  LIBS="-lbfd -liberty $intl $LIBS"
+  if test -f ../zlib/Makefile; then
+    LIBS="-lbfd -L../zlib -lz -liberty $intl $LIBS"
+  else
+    LIBS="-lbfd -lz -liberty $intl $LIBS"
+  fi
   AC_CACHE_CHECK([$1], [$2],
   [AC_TRY_LINK(
   [#include <stdlib.h>

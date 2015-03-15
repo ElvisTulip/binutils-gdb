@@ -246,7 +246,7 @@ Options:\n\
   fprintf (stream, _("\
   --alternate             initially turn on alternate macro syntax\n"));
   fprintf (stream, _("\
-  --compress-debug-sections\n\
+  --compress-debug-sections [none|zlib|zlib-gnu|zlib-gabi]\n\
                           compress DWARF debug sections using zlib\n"));
   fprintf (stream, _("\
   --nocompress-debug-sections\n\
@@ -453,7 +453,7 @@ parse_args (int * pargc, char *** pargv)
       OPTION_REDUCE_MEMORY_OVERHEADS,
       OPTION_WARN_FATAL,
       OPTION_COMPRESS_DEBUG,
-      OPTION_NOCOMPRESS_DEBUG
+      OPTION_NOCOMPRESS_DEBUG,
     /* When you add options here, check that they do
        not collide with OPTION_MD_BASE.  See as.h.  */
     };
@@ -471,7 +471,7 @@ parse_args (int * pargc, char *** pargv)
     ,{"a", optional_argument, NULL, 'a'}
     /* Handle -al=<FILE>.  */
     ,{"al", optional_argument, NULL, OPTION_AL}
-    ,{"compress-debug-sections", no_argument, NULL, OPTION_COMPRESS_DEBUG}
+    ,{"compress-debug-sections", optional_argument, NULL, OPTION_COMPRESS_DEBUG}
     ,{"nocompress-debug-sections", no_argument, NULL, OPTION_NOCOMPRESS_DEBUG}
     ,{"debug-prefix-map", required_argument, NULL, OPTION_DEBUG_PREFIX_MAP}
     ,{"defsym", required_argument, NULL, OPTION_DEFSYM}
@@ -655,11 +655,28 @@ This program has absolutely no warranty.\n"));
 	  exit (EXIT_SUCCESS);
 
 	case OPTION_COMPRESS_DEBUG:
-	  flag_compress_debug = 1;
+	  if (optarg)
+	    {
+	      if (strcasecmp (optarg, "none") == 0)
+		flag_compress_debug = COMPRESS_DEBUG_NONE;
+	      else if (strcasecmp (optarg, "zlib") == 0)
+		flag_compress_debug = COMPRESS_DEBUG_ZLIB;
+	      else if (strcasecmp (optarg, "zlib-gnu") == 0)
+		flag_compress_debug = COMPRESS_DEBUG_GNU_ZLIB;
+#if defined OBJ_ELF || defined OBJ_MAYBE_ELF
+	      else if (strcasecmp (optarg, "zlib-gabi") == 0)
+		flag_compress_debug = COMPRESS_DEBUG_GABI_ZLIB;
+#endif
+	      else
+		as_fatal (_("Invalid --compress-debug-sections option: `%s'"),
+			  optarg);
+	    }
+	  else
+	    flag_compress_debug = COMPRESS_DEBUG_ZLIB;
 	  break;
 
 	case OPTION_NOCOMPRESS_DEBUG:
-	  flag_compress_debug = 0;
+	  flag_compress_debug = COMPRESS_DEBUG_NONE;
 	  break;
 
 	case OPTION_DEBUG_PREFIX_MAP:

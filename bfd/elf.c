@@ -1042,19 +1042,28 @@ _bfd_elf_make_section_from_shdr (bfd *abfd,
     {
       enum { nothing, compress, decompress } action = nothing;
       char *new_name;
+      int compression_header_size;
+      bfd_boolean compressed
+	= bfd_is_section_compressed_with_header (abfd, newsect,
+						 &compression_header_size);
 
-      if (bfd_is_section_compressed (abfd, newsect))
+      if (compressed)
 	{
 	  /* Compressed section.  Check if we should decompress.  */
 	  if ((abfd->flags & BFD_DECOMPRESS))
 	    action = decompress;
 	}
-      else
-	{
-	  /* Normal section.  Check if we should compress.  */
-	  if ((abfd->flags & BFD_COMPRESS) && newsect->size != 0)
-	    action = compress;
-	}
+
+      /* Normal section or different compressed section.  Check if
+	 we should compress.  */
+      if (action == nothing
+	  && newsect->size != 0
+	  && (abfd->flags & BFD_COMPRESS)
+	  && compression_header_size >= 0
+	  && (!compressed
+	      || ((compression_header_size > 0)
+		  != ((abfd->flags & BFD_COMPRESS_GABI) != 0))))
+	action = compress;
 
       new_name = NULL;
       switch (action)
@@ -1074,6 +1083,9 @@ _bfd_elf_make_section_from_shdr (bfd *abfd,
 	     actually taken place.  */
 	  if (newsect->compress_status == COMPRESS_SECTION_DONE)
 	    {
+	      if ((elf_section_flags (newsect) & SHF_COMPRESSED) != 0)
+		goto remove_z;
+	      else if (name[1] != 'z')
 	      if (name[1] != 'z')
 		{
 		  unsigned int len = strlen (name);
@@ -1095,6 +1107,7 @@ _bfd_elf_make_section_from_shdr (bfd *abfd,
 		 abfd, name);
 	      return FALSE;
 	    }
+remove_z:
 	  if (name[1] == 'z')
 	    {
 	      unsigned int len = strlen (name);
@@ -6653,6 +6666,11 @@ _bfd_elf_init_private_section_data (bfd *ibfd,
 	  elf_next_in_group (osec) = elf_next_in_group (isec);
 	  elf_section_data (osec)->group = elf_section_data (isec)->group;
 	}
+
+      /* If not decompress, preserve SHF_COMPRESSED.  */
+      if ((ibfd->flags & BFD_DECOMPRESS) == 0)
+	elf_section_flags (osec) |= (elf_section_flags (isec)
+				     & SHF_COMPRESSED);
     }
 
   ihdr = &elf_section_data (isec)->this_hdr;

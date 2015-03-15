@@ -254,13 +254,18 @@ BUILD_CFLAGS = -g -O $(CSEARCH)
 
 COMMON_DEP_CFLAGS = $(CONFIG_CFLAGS) $(CSEARCH)
 
+# This is where we get zlib from.  zlibdir is -L../zlib and zlibinc is
+# -I../zlib, unless we were configured with --with-system-zlib, in which
+# case both are empty.
+ZLIB = @zlibdir@ -lz
+
 LIBIBERTY_LIB = ../../libiberty/libiberty.a
 BFD_LIB = ../../bfd/libbfd.a
 @PLUGINS_TRUE@LIBDL = @lt_cv_dlopen_libs@
 OPCODES_LIB = ../../opcodes/libopcodes.a
 LIBINTL = @LIBINTL@
 LIBINTL_DEP = @LIBINTL_DEP@
-CONFIG_LIBS = @LIBS@
+CONFIG_LIBS = @LIBS@ $(ZLIB)
 LIBDEPS = $(BFD_LIB) $(OPCODES_LIB) $(LIBINTL_DEP) $(LIBIBERTY_LIB) \
 	$(SIM_EXTRA_LIBDEPS)
 EXTRA_LIBS = $(BFD_LIB) $(OPCODES_LIB) $(LIBINTL) $(LIBIBERTY_LIB) \

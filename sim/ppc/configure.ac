@@ -666,9 +666,13 @@ AC_DEFINE_UNQUOTED([REPORT_BUGS_TO], ["$REPORT_BUGS_TO"], [Bug reporting address
 AC_CANONICAL_SYSTEM
 AC_ARG_PROGRAM
 
-# BFD conditionally uses zlib, so we must link it in if libbfd does, by
-# using the same condition.
-AM_ZLIB
+# Use the system's zlib library.
+zlibdir=-L../zlib
+AC_ARG_WITH(system-zlib,
+[AS_HELP_STRING([--with-system-zlib], [use installed libz])],
+zlibdir=
+)
+AC_SUBST(zlibdir)
 
 # BFD uses libdl when when plugins enabled.
 AC_PLUGINS

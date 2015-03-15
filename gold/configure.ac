@@ -526,9 +526,16 @@ else
   AC_LIBOBJ(mremap)
 fi
 
-# Link in zlib if we can.  This allows us to write compressed sections.
-AM_ZLIB
-AM_CONDITIONAL(HAVE_ZLIB, test "$ac_cv_header_zlib_h" = "yes")
+# Use the system's zlib library.
+zlibdir=-L../zlib
+zlibinc="-I\$(srcdir)/../zlib"
+AC_ARG_WITH(system-zlib,
+[AS_HELP_STRING([--with-system-zlib], [use installed libz])],
+zlibdir=
+zlibinc=
+)
+AC_SUBST(zlibdir)
+AC_SUBST(zlibinc)
 
 dnl We have to check these in C, not C++, because autoconf generates
 dnl tests which have no type information, and current glibc provides
